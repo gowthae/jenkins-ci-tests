@@ -1,29 +1,11 @@
-pipeline {
-    agent any
+FROM golang:1.22-alpine
 
-    environment {
-        IMAGE_NAME = "go-ci-app"
-        VERSION = "v1.0"
-    }
+WORKDIR /app
 
-    stages {
+COPY . .
 
-        stage('Checkout') {
-            steps {
-                git branch: 'main', url: 'https://github.com/gowthae/jenkins-ci-tests.git'
-            }
-        }
+RUN go mod tidy
 
-        stage('Build Docker Image') {
-            steps {
-                sh 'docker build -t $IMAGE_NAME:$VERSION .'
-            }
-        }
+RUN go build -o app
 
-        stage('Run Container') {
-            steps {
-                sh 'docker run --rm $IMAGE_NAME:$VERSION'
-            }
-        }
-    }
-}
+CMD ["./app"]
