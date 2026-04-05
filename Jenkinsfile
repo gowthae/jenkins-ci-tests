@@ -1,26 +1,42 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = "go-ci-app"
+        VERSION = "v1"
+    }
+
     stages {
-        stage('Setup') {
+
+        stage('Checkout') {
             steps {
-                sh 'go mod tidy'
+                git branch: 'main', url: 'https://github.com/gowthae/jenkins-ci-tests.git'
             }
         }
-        stage('Lint') {
+
+        stage('Build Docker Image') {
             steps {
-                sh 'go vet ./...'
+                sh '''
+                docker build -t $IMAGE_NAME:$VERSION .
+                '''
             }
         }
-        stage('Test') {
+
+        stage('Run Container') {
             steps {
-                sh 'go test -v -cover ./...'
+                sh '''
+                docker run --rm $IMAGE_NAME:$VERSION
+                '''
             }
         }
-        stage('Build') {
-            steps {
-                sh 'go build'
-            }
+    }
+
+    post {
+        success {
+            echo "Pipeline executed successfully 🚀"
+        }
+        failure {
+            echo "Pipeline failed ❌"
         }
     }
 }
