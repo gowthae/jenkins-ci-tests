@@ -1,12 +1,20 @@
-FROM golang:1.22-alpine
+# Stage 1: Use Go image to build the binary (optional if binary is already built outside)
+# FROM golang:1.22-alpine AS builder
+# WORKDIR /app
+# COPY . .
+# RUN go build -o app
 
+# Stage 2: Use minimal base image for runtime
+FROM alpine:3.20
+
+# Set working directory inside container
 WORKDIR /app
 
-COPY go.mod go.sum ./
-RUN go mod download
+# Copy the pre-built binary from Jenkins workspace
+COPY app .
 
-COPY . .
+# Make sure binary is executable
+RUN chmod +x app
 
-RUN go build -o app .
-
+# Default command when container runs
 CMD ["./app"]
