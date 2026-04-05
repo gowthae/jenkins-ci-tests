@@ -1,18 +1,29 @@
-# Step 1: Build stage
-FROM golang:1.22 AS builder
+pipeline {
+    agent any
 
-WORKDIR /app
+    environment {
+        IMAGE_NAME = "go-ci-app"
+        VERSION = "v1.0"
+    }
 
-COPY . .
+    stages {
 
-RUN go mod tidy
-RUN go build -o app
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/gowthae/jenkins-ci-tests.git'
+            }
+        }
 
-# Step 2: Run stage (small image)
-FROM alpine:latest
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t $IMAGE_NAME:$VERSION .'
+            }
+        }
 
-WORKDIR /root/
-
-COPY --from=builder /app/app .
-
-CMD ["./app"]
+        stage('Run Container') {
+            steps {
+                sh 'docker run --rm $IMAGE_NAME:$VERSION'
+            }
+        }
+    }
+}
