@@ -71,15 +71,20 @@ pipeline {
     }
 }
 
+    
+
         stage('Optional: Push to Local Registry') {
-            steps {
-                echo "🏗 Tagging and pushing image to local registry..."
-                sh '''
-                docker tag ${REPO_NAME}:${IMAGE_TAG} ${LOCAL_REGISTRY}/${REPO_NAME}:${IMAGE_TAG}
-                docker push ${LOCAL_REGISTRY}/${REPO_NAME}:${IMAGE_TAG} || echo "Local registry not running, skipping"
-                '''
-            }
+    steps {
+        echo "🏗 Tagging and pushing image to local registry..."
+        script {
+            def localImage = "${LOCAL_REGISTRY}/${REPO_NAME}:${IMAGE_TAG}"
+            sh """
+            docker tag ${REPO_NAME}:${IMAGE_TAG} ${localImage}
+            docker push ${localImage} || echo "Local registry not running, skipping"
+            """
         }
+    }
+}
 
         stage('Push Docker Image to ECR (Optional)') {
             when {
