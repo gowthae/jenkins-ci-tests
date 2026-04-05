@@ -14,9 +14,28 @@ pipeline {
             }
         }
 
+        stage('Install Dependencies') {
+            steps {
+                sh '''
+                echo "Installing dependencies..."
+                go mod tidy
+                '''
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh '''
+                echo "Running tests..."
+                go test ./...
+                '''
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 sh '''
+                echo "Building Docker image..."
                 docker build -t $IMAGE_NAME:$VERSION .
                 '''
             }
@@ -25,18 +44,20 @@ pipeline {
         stage('Run Container') {
             steps {
                 sh '''
+                echo "Running container..."
                 docker run --rm $IMAGE_NAME:$VERSION
                 '''
             }
         }
+
     }
 
     post {
         success {
-            echo "Pipeline executed successfully 🚀"
+            echo "✅ Pipeline executed successfully"
         }
         failure {
-            echo "Pipeline failed ❌"
+            echo "❌ Pipeline failed"
         }
     }
 }
