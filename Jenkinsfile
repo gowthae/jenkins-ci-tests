@@ -1,9 +1,14 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'golang:1.21'
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
+        }
+    }
 
     environment {
         IMAGE_NAME = "go-ci-app"
-        VERSION = "v1"
+        VERSION = "${BUILD_NUMBER}"
     }
 
     stages {
@@ -11,6 +16,16 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/gowthae/jenkins-ci-tests.git'
+            }
+        }
+
+        stage('Verify Environment') {
+            steps {
+                sh '''
+                echo "Checking environment..."
+                go version
+                docker --version
+                '''
             }
         }
 
@@ -27,19 +42,28 @@ pipeline {
             steps {
                 sh '''
                 echo "Running tests..."
-                go test ./...
+                go test ./... -v
+                '''
+            }
+        }
+
+        stage('Build Binary') {
+            steps {
+                sh '''
+                echo "Building Go binary..."
+                go build -o app
                 '''
             }
         }
 
         stage('Build Docker Image') {
-    steps {
-        sh '''
-        echo "Building Docker image..."
-        docker build --memory=512m -t $IMAGE_NAME:$VERSION .
-        '''
-    }
-}
+            steps {
+                sh '''
+                echo "Building Docker image..."
+                docker build -t $IMAGE_NAME:$VERSION .
+                '''
+            }
+        }
 
         stage('Run Container') {
             steps {
@@ -58,6 +82,9 @@ pipeline {
         }
         failure {
             echo "❌ Pipeline failed"
+        }
+        always {
+            sh 'docker system prune -f || true'
         }
     }
 }
