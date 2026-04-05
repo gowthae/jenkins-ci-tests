@@ -61,12 +61,15 @@ pipeline {
             }
         }
 
+
         stage('Build Docker Image') {
-            steps {
-                echo "🐳 Building Docker image..."
-                sh "docker build -t ${REPO_NAME}:${IMAGE_TAG} ."
-            }
-        }
+    steps {
+        echo '🐳 Building Docker image...'
+        sh """
+            docker build -t go-ci-app:${IMAGE_TAG} .
+        """
+    }
+}
 
         stage('Optional: Push to Local Registry') {
             steps {
