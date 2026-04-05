@@ -33,13 +33,13 @@ pipeline {
         }
 
         stage('Build Docker Image') {
-            steps {
-                sh '''
-                echo "Building Docker image..."
-                docker build -t $IMAGE_NAME:$VERSION .
-                '''
-            }
-        }
+    steps {
+        sh '''
+        echo "Building Docker image..."
+        docker build --memory=512m -t $IMAGE_NAME:$VERSION .
+        '''
+    }
+}
 
         stage('Run Container') {
             steps {
